@@ -1,12 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <pthread.h>
 #include "mural.h"
-
-pthread_mutex_t mutexPediddos = PTHREAD_MUTEX_INITIALIZER;
-
-Pedido *inicio = NULL;
 
 void adicionarPedido(const char *nome, int preparo, int cozimento)
 {
@@ -39,7 +36,7 @@ void listarPedidos()
     printf("***Pedidos no mural***:\n");
     while (temp != NULL)
     {
-        printf("Nome do prato: %ds - Preparo: %ds - Cozimento: %ds\n", temp->nome, temp->tempoPreparoIngredientes, temp->tempoCozimento);
+        printf("Nome do prato: %s - Preparo: %d - Cozimento: %d\n", temp->nome, temp->tempoPreparoIngredientes, temp->tempoCozimento);
         temp = temp->proximo;
     }
     pthread_mutex_unlock(&mutexPedidos);
