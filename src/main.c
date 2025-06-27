@@ -10,10 +10,10 @@
 #define NUM_COZINHAS 3
 
 pthread_mutex_t mutexPedidos = PTHREAD_MUTEX_INITIALIZER;
-pthread_mutex_t mutexBancadas = PTHREAD_MUTEX_INITIALIZER
-    pthread_mutex_t mutexCozinhas = PTHREAD_MUTEX_INITIALIZER
+pthread_mutex_t mutexBancadas = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutexCozinhas = PTHREAD_MUTEX_INITIALIZER;
 
-    Pedido *inicio = NULL;
+Pedido *inicio = NULL;
 
 Bancada bancadas[NUM_BANCADAS];
 Cozinha cozinhas[NUM_COZINHAS];
@@ -45,9 +45,6 @@ int main()
         fprintf(stderr, "Erro ao criar a thread do nural...\n");
         return 1;
     }
-
-    Tripulante tripulantes[4];
-    pthread_t threadsTripulantes[4];
 
     for (int i = 0; i < 4; i++)
     {
