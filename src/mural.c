@@ -13,6 +13,7 @@ extern int muralAtivo;
 
 int totalPedidos = 0;
 
+// Adiciona um novo pedido ao final da lista encadeada
 void adicionarPedido(const char *nome, int preparo, int cozimento)
 {
     Pedido *novo = malloc(sizeof(Pedido));
@@ -36,10 +37,10 @@ void adicionarPedido(const char *nome, int preparo, int cozimento)
     }
 
     totalPedidos++;
-
     pthread_mutex_unlock(&mutexPedidos);
 }
 
+// Simula a chegada dos pedidos com intervalo de tempo
 void *muralDePedidos(void *arg)
 {
     adicionarPedido("Meteorito Saboroso", 5, 3);
@@ -52,6 +53,7 @@ void *muralDePedidos(void *arg)
     return NULL;
 }
 
+// Atualiza periodicamente a exibição do mural na tela
 void *exibirMuralPeriodicamente(void *arg)
 {
     while (muralAtivo)
@@ -60,10 +62,14 @@ void *exibirMuralPeriodicamente(void *arg)
         Pedido *temp = inicio;
 
         pthread_mutex_lock(&mutexTela);
-        clear();
-        mvprintw(0, 0, "---Mural Atual---");
 
-        int linha = 1;
+        // Limpa as linhas onde o mural será exibido
+        for (int i = 0; i < 15; i++)
+            mvprintw(4 + i, 0, "                                         ");
+
+        mvprintw(4, 0, "---Mural Atual---");
+
+        int linha = 5;
         while (temp != NULL)
         {
             mvprintw(linha++, 0, "Prato: %s | Preparo: %d | Cozimento: %d",

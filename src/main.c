@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <locale.h>
 #include <ncurses.h>
 #include "mural.h"
 #include "structs.h"
@@ -18,25 +19,30 @@ pthread_mutex_t mutexTela = PTHREAD_MUTEX_INITIALIZER;
 
 Pedido *inicio = NULL;
 int muralAtivo = 1;
-int linhaSaida = 10;
+int linhaSaida = 15;
 
 Bancada bancadas[NUM_BANCADAS];
 Cozinha cozinhas[NUM_COZINHAS];
 
 int main()
 {
+    setlocale(LC_ALL, "pt_BR.UTF-8");
+
+    // Threads e tripulantes
     pthread_t threadMural;
     pthread_t threadMuralExibicao;
     pthread_t threadChefe;
     pthread_t threadsTripulantes[NUM_TRIPULANTES];
     Tripulante tripulantes[NUM_TRIPULANTES];
 
+    // Inicialização do ncurses
     initscr();
     noecho();
     curs_set(FALSE);
     clear();
     refresh();
 
+    // Mensagem de boas-vindas
     pthread_mutex_lock(&mutexTela);
     mvprintw(0, 0, "****************************");
     mvprintw(1, 0, "BEM-VINDO AO FORA NO ESPAÇO!");
@@ -44,6 +50,7 @@ int main()
     refresh();
     pthread_mutex_unlock(&mutexTela);
 
+    // Inicializa bancadas e cozinhas
     for (int i = 0; i < NUM_BANCADAS; i++)
     {
         bancadas[i].id = i + 1;
@@ -63,26 +70,19 @@ int main()
         tripulantes[i].pedidoAtual = NULL;
     }
 
+    // Inicia threads principais
     pthread_create(&threadChefe, NULL, chefeDeCozinha, tripulantes);
     pthread_create(&threadMuralExibicao, NULL, exibirMuralPeriodicamente, NULL);
+    pthread_create(&threadMural, NULL, muralDePedidos, NULL);
 
-    if (pthread_create(&threadMural, NULL, muralDePedidos, NULL))
-    {
-        pthread_mutex_lock(&mutexTela);
-        mvprintw(4, 0, "Erro ao criar a thread do mural...");
-        refresh();
-        pthread_mutex_unlock(&mutexTela);
-        endwin();
-        return 1;
-    }
-
+    // Tripulantes executam seus pedidos
     for (int i = 0; i < NUM_TRIPULANTES; i++)
     {
         pthread_create(&threadsTripulantes[i], NULL, executarTripulante, &tripulantes[i]);
     }
 
+    // Aguarda fim das threads
     pthread_join(threadMural, NULL);
-
     for (int i = 0; i < NUM_TRIPULANTES; i++)
     {
         pthread_join(threadsTripulantes[i], NULL);
@@ -93,8 +93,9 @@ int main()
     pthread_join(threadMuralExibicao, NULL);
     pthread_join(threadChefe, NULL);
 
+    // Mensagem final
     pthread_mutex_lock(&mutexTela);
-    mvprintw(20, 0, "Todos os pedidos foram processados!");
+    mvprintw(linhaSaida++, 0, "Todos os pedidos foram processados!");
     refresh();
     pthread_mutex_unlock(&mutexTela);
 

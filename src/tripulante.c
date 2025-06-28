@@ -28,6 +28,7 @@ void *executarTripulante(void *arg)
 
         Pedido *pedidoAtual = trip->pedidoAtual;
 
+        // Busca por bancada livre para preparar o prato
         int bancadaUsada = -1;
         pthread_mutex_lock(&mutexBancadas);
         for (int i = 0; i < 3; i++)
@@ -44,7 +45,8 @@ void *executarTripulante(void *arg)
         if (bancadaUsada != -1)
         {
             pthread_mutex_lock(&mutexTela);
-            mvprintw(linhaSaida++, 0, "Tripulante %d começou o preparo do prato %s na bancada %d", trip->id, pedidoAtual->nome, bancadaUsada);
+            mvprintw(linhaSaida++, 0, "Tripulante %d começou o preparo do prato %s na bancada %d",
+                     trip->id, pedidoAtual->nome, bancadaUsada);
             refresh();
             pthread_mutex_unlock(&mutexTela);
 
@@ -55,6 +57,7 @@ void *executarTripulante(void *arg)
             pthread_mutex_unlock(&mutexBancadas);
         }
 
+        // Busca por cozinha livre para cozinhar o prato
         int cozinhaUsada = -1;
         pthread_mutex_lock(&mutexCozinhas);
         for (int i = 0; i < 3; i++)
@@ -71,7 +74,8 @@ void *executarTripulante(void *arg)
         if (cozinhaUsada != -1)
         {
             pthread_mutex_lock(&mutexTela);
-            mvprintw(linhaSaida++, 0, "Tripulante %d está cozinhando o prato %s na cozinha %d", trip->id, pedidoAtual->nome, cozinhaUsada);
+            mvprintw(linhaSaida++, 0, "Tripulante %d está cozinhando o prato %s na cozinha %d",
+                     trip->id, pedidoAtual->nome, cozinhaUsada);
             refresh();
             pthread_mutex_unlock(&mutexTela);
 
@@ -82,8 +86,10 @@ void *executarTripulante(void *arg)
             pthread_mutex_unlock(&mutexCozinhas);
         }
 
+        // Finalização do pedido
         pthread_mutex_lock(&mutexTela);
-        mvprintw(linhaSaida++, 0, "Tripulante %d finalizou o prato %s", trip->id, pedidoAtual->nome);
+        mvprintw(linhaSaida++, 0, "Tripulante %d finalizou o prato %s",
+                 trip->id, pedidoAtual->nome);
         refresh();
         pthread_mutex_unlock(&mutexTela);
 
@@ -91,6 +97,7 @@ void *executarTripulante(void *arg)
         trip->pedidoAtual = NULL;
         trip->ocupado = 0;
 
+        // Verifica se há mais pedidos no mural
         pthread_mutex_lock(&mutexPedidos);
         if (inicio == NULL)
         {
@@ -100,6 +107,7 @@ void *executarTripulante(void *arg)
         pthread_mutex_unlock(&mutexPedidos);
     }
 
+    // Finaliza a thread do tripulante
     pthread_mutex_lock(&mutexTela);
     mvprintw(linhaSaida++, 0, "Tripulante %d concluiu todos os pedidos e está descansando!", trip->id);
     refresh();
