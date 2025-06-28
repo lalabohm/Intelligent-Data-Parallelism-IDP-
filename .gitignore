@@ -1,3 +1,7 @@
 *.txt
 .vscode/
-
+/obj/
+/fora-no-espaco
+*~
+*.swp
+*.swo

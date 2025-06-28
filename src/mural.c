@@ -7,25 +7,31 @@
 #include "mural.h"
 #include "structs.h"
 
+#define LOG_MAX_MESSAGES 8
+
+// --- Variáveis Globais Externas ---
 extern pthread_mutex_t mutexPedidos;
 extern pthread_mutex_t mutexTela;
+extern pthread_mutex_t mutexLog;
+
 extern Pedido *inicio;
 extern int muralAtivo;
-extern int linhaSaida;
+extern char mensagens_log[LOG_MAX_MESSAGES][128];
+extern int num_logs;
 
-int totalPedidos = 0;
-
-// Função para adicionar novo pedido ao final da lista
+// Adiciona um novo pedido ao final da lista
 void adicionarPedido(const char *nome, int preparo, int cozimento)
 {
     Pedido *novo = malloc(sizeof(Pedido));
+    if (!novo)
+        return;
+
     strcpy(novo->nome, nome);
     novo->tempoPreparoIngredientes = preparo;
     novo->tempoCozimento = cozimento;
     novo->proximo = NULL;
 
     pthread_mutex_lock(&mutexPedidos);
-
     if (inicio == NULL)
     {
         inicio = novo;
@@ -37,89 +43,57 @@ void adicionarPedido(const char *nome, int preparo, int cozimento)
             temp = temp->proximo;
         temp->proximo = novo;
     }
-
-    totalPedidos++;
     pthread_mutex_unlock(&mutexPedidos);
 }
 
-// Função que permite ao chefe inserir pratos manualmente
-void *muralDePedidos(void *arg)
-{
-    char *opcoes[] = {
-        "Meteorito Saboroso",
-        "Eclipse Energético",
-        "Carne Cósmica",
-        "Nugget de Supernova"};
-
-    int temposPreparo[] = {5, 4, 6, 3};
-    int temposCozimento[] = {3, 2, 3, 2};
-    int escolha;
-
-    while (1)
-    {
-        pthread_mutex_lock(&mutexTela);
-        mvprintw(linhaSaida++, 0, "Escolha um prato para adicionar ao mural:");
-        for (int j = 0; j < 4; j++)
-        {
-            mvprintw(linhaSaida++, 0, "%d. %s", j + 1, opcoes[j]);
-        }
-        mvprintw(linhaSaida++, 0, "5. Sair");
-        refresh();
-        pthread_mutex_unlock(&mutexTela);
-
-        echo();
-        scanw("%d", &escolha);
-        noecho();
-
-        if (escolha >= 1 && escolha <= 4)
-        {
-            adicionarPedido(opcoes[escolha - 1], temposPreparo[escolha - 1], temposCozimento[escolha - 1]);
-        }
-        else if (escolha == 5)
-        {
-            break; // Sai do loop
-        }
-
-        sleep(1);
-    }
-
-    return NULL;
-}
-
-// Exibe os pedidos atuais do mural na tela a cada 2 segundos
-void *exibirMuralPeriodicamente(void *arg)
+// THREAD: GERENCIADOR DE TELA
+// Única thread responsável por todas as operações de desenho.
+void *gerenciadorDeTela(void *arg)
 {
     while (muralAtivo)
     {
-        pthread_mutex_lock(&mutexPedidos);
-        Pedido *temp = inicio;
-
         pthread_mutex_lock(&mutexTela);
+        erase(); // Limpa a tela inteira para redesenhar
 
-        // Limpa as linhas do mural
-        for (int i = 0; i < 15; i++)
-            mvprintw(4 + i, 0, "                                         ");
+        // --- 1. Desenha o Cabeçalho ---
+        attron(COLOR_PAIR(2));
+        mvprintw(0, 1, "BEM-VINDO AO RESTAURANTE FORA NO ESPAÇO!");
+        attroff(COLOR_PAIR(2));
 
-        attron(COLOR_PAIR(3)); // Título amarelo
-        mvprintw(4, 0, "--- Mural Atual ---");
-        attroff(COLOR_PAIR(3));
-
-        int linha = 5;
-        while (temp != NULL)
+        // --- 2. Desenha o Mural de Pedidos ---
+        mvprintw(2, 0, "--- MURAL DE PEDIDOS ---");
+        pthread_mutex_lock(&mutexPedidos);
+        int linha = 3;
+        Pedido *temp = inicio;
+        while (temp != NULL && linha < 10)
         {
-            attron(COLOR_PAIR(2)); // Pratos em rosa (magenta)
-            mvprintw(linha++, 0, "Prato: %s | Preparo: %d | Cozimento: %d",
+            attron(COLOR_PAIR(1));
+            mvprintw(linha++, 1, "Prato: %-20s | Preparo: %d | Cozimento: %d",
                      temp->nome, temp->tempoPreparoIngredientes, temp->tempoCozimento);
-            attroff(COLOR_PAIR(2));
+            attroff(COLOR_PAIR(1));
             temp = temp->proximo;
         }
-
-        refresh();
-        pthread_mutex_unlock(&mutexTela);
         pthread_mutex_unlock(&mutexPedidos);
 
-        sleep(2);
-    }
+        // --- 3. Desenha o Painel de Status/Log ---
+        mvprintw(12, 0, "--- LOG DE ATIVIDADES ---");
+        pthread_mutex_lock(&mutexLog);
+        for (int i = 0; i < num_logs; i++)
+        {
+            mvprintw(13 + i, 1, "%s", mensagens_log[i]);
+        }
+        pthread_mutex_unlock(&mutexLog);
 
+        // --- 4. Desenha as Instruções ---
+        attron(COLOR_PAIR(6));
+        mvprintw(22, 0, "COMANDOS: Pressione (1-4) para atribuir o próximo pedido ao tripulante correspondente.");
+        attroff(COLOR_PAIR(6));
+
+        // Atualiza a tela física UMA VEZ
+        refresh();
+        pthread_mutex_unlock(&mutexTela);
+
+        usleep(100000);
+    }
     return NULL;
 }

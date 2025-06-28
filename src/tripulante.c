@@ -2,26 +2,27 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
-#include <ncurses.h>
-#include "mural.h"
 #include "structs.h"
 
-extern pthread_mutex_t mutexPedidos;
+// --- Variáveis Globais Externas ---
 extern pthread_mutex_t mutexBancadas;
 extern pthread_mutex_t mutexCozinhas;
-extern pthread_mutex_t mutexTela;
-extern int linhaSaida;
+extern pthread_cond_t condBancadas;
+extern pthread_cond_t condCozinhas;
+
 extern Bancada bancadas[];
 extern Cozinha cozinhas[];
-extern Pedido *inicio;
+extern int muralAtivo;
+extern void adicionar_log(const char *mensagem); // Função de log centralizada
 
 void *executarTripulante(void *arg)
 {
     Tripulante *trip = (Tripulante *)arg;
+    char buffer_log[128];
 
-    while (1)
+    while (muralAtivo)
     {
-        // Espera por um pedido atribuído
+        // Espera por um pedido ser atribuído pelo chefe
         if (trip->pedidoAtual == NULL)
         {
             sleep(1);
@@ -30,103 +31,92 @@ void *executarTripulante(void *arg)
 
         Pedido *pedidoAtual = trip->pedidoAtual;
 
-        // ============================
-        // BUSCA POR BANCADA LIVRE
-        // ============================
-        int bancadaUsada = -1;
+        int bancadaIdx = -1;
+
         pthread_mutex_lock(&mutexBancadas);
-        for (int i = 0; i < 3; i++)
+        while (muralAtivo) // Loop para esperar pela condição
         {
-            if (!bancadas[i].ocupado)
-            {
-                bancadas[i].ocupado = 1;
-                bancadaUsada = bancadas[i].id;
-                break;
+            // Procura por uma bancada livre
+            for (int i = 0; i < 3; i++)
+            { // NUM_BANCADAS
+                if (!bancadas[i].ocupado)
+                {
+                    bancadas[i].ocupado = 1;
+                    bancadaIdx = i;
+                    break;
+                }
             }
+
+            if (bancadaIdx != -1)
+            {
+                break; // Conseguiu a bancada, sai do loop de espera
+            }
+
+            // Se não encontrou, espera ser sinalizado (acordado)
+            pthread_cond_wait(&condBancadas, &mutexBancadas);
         }
         pthread_mutex_unlock(&mutexBancadas);
 
-        if (bancadaUsada != -1)
-        {
-            pthread_mutex_lock(&mutexTela);
-            attron(COLOR_PAIR(2)); // Rosa (preparo)
-            mvprintw(linhaSaida++, 0, "Tripulante %d começou o preparo do prato %s na bancada %d",
-                     trip->id, pedidoAtual->nome, bancadaUsada);
-            attroff(COLOR_PAIR(2));
-            refresh();
-            pthread_mutex_unlock(&mutexTela);
+        if (!muralAtivo)
+            break; // Verifica se a simulação acabou enquanto esperava
 
-            sleep(pedidoAtual->tempoPreparoIngredientes);
+        // Prepara o prato
+        sprintf(buffer_log, "Trip %d prepara '%s' na bancada %d", trip->id, pedidoAtual->nome, bancadas[bancadaIdx].id);
+        adicionar_log(buffer_log);
+        sleep(pedidoAtual->tempoPreparoIngredientes);
 
-            // Libera bancada
-            pthread_mutex_lock(&mutexBancadas);
-            bancadas[bancadaUsada - 1].ocupado = 0;
-            pthread_mutex_unlock(&mutexBancadas);
-        }
+        // Libera a bancada e acorda uma thread que esteja esperando
+        pthread_mutex_lock(&mutexBancadas);
+        bancadas[bancadaIdx].ocupado = 0;
+        pthread_cond_signal(&condBancadas);
+        pthread_mutex_unlock(&mutexBancadas);
 
-        // ============================
-        // BUSCA POR COZINHA LIVRE
-        // ============================
-        int cozinhaUsada = -1;
+        int cozinhaIdx = -1;
+
         pthread_mutex_lock(&mutexCozinhas);
-        for (int i = 0; i < 3; i++)
+        while (muralAtivo) // Loop para esperar
         {
-            if (!cozinhas[i].ocupado)
+            for (int i = 0; i < 3; i++)
             {
-                cozinhas[i].ocupado = 1;
-                cozinhaUsada = cozinhas[i].id;
+                if (!cozinhas[i].ocupado)
+                {
+                    cozinhas[i].ocupado = 1;
+                    cozinhaIdx = i;
+                    break;
+                }
+            }
+            if (cozinhaIdx != -1)
+            {
                 break;
             }
+            pthread_cond_wait(&condCozinhas, &mutexCozinhas);
         }
         pthread_mutex_unlock(&mutexCozinhas);
 
-        if (cozinhaUsada != -1)
-        {
-            pthread_mutex_lock(&mutexTela);
-            attron(COLOR_PAIR(4)); // Azul (cozimento)
-            mvprintw(linhaSaida++, 0, "Tripulante %d está cozinhando o prato %s na cozinha %d",
-                     trip->id, pedidoAtual->nome, cozinhaUsada);
-            attroff(COLOR_PAIR(4));
-            refresh();
-            pthread_mutex_unlock(&mutexTela);
+        if (!muralAtivo)
+            break;
 
-            sleep(pedidoAtual->tempoCozimento);
+        // Cozinha o prato
+        sprintf(buffer_log, "Trip %d cozinha '%s' na cozinha %d", trip->id, pedidoAtual->nome, cozinhas[cozinhaIdx].id);
+        adicionar_log(buffer_log);
+        sleep(pedidoAtual->tempoCozimento);
 
-            // Libera cozinha
-            pthread_mutex_lock(&mutexCozinhas);
-            cozinhas[cozinhaUsada - 1].ocupado = 0;
-            pthread_mutex_unlock(&mutexCozinhas);
-        }
+        // Libera a cozinha e acorda outra thread
+        pthread_mutex_lock(&mutexCozinhas);
+        cozinhas[cozinhaIdx].ocupado = 0;
+        pthread_cond_signal(&condCozinhas); // Acorda UMA thread
+        pthread_mutex_unlock(&mutexCozinhas);
 
-        // ============================
-        // FINALIZAÇÃO DO PEDIDO
-        // ============================
-        pthread_mutex_lock(&mutexTela);
-        attron(COLOR_PAIR(3)); // Vermelho (finalização)
-        mvprintw(linhaSaida++, 0, "Tripulante %d finalizou o prato %s", trip->id, pedidoAtual->nome);
-        attroff(COLOR_PAIR(3));
-        refresh();
-        pthread_mutex_unlock(&mutexTela);
+        sprintf(buffer_log, "Trip %d FINALIZOU o prato '%s'!", trip->id, pedidoAtual->nome);
+        adicionar_log(buffer_log);
 
         free(pedidoAtual);
         trip->pedidoAtual = NULL;
         trip->ocupado = 0;
-
-        // Se não há mais pedidos, encerra
-        pthread_mutex_lock(&mutexPedidos);
-        int acabou = (inicio == NULL);
-        pthread_mutex_unlock(&mutexPedidos);
-
-        if (acabou)
-            break;
     }
 
-    pthread_mutex_lock(&mutexTela);
-    attron(COLOR_PAIR(1)); // Branco
-    mvprintw(linhaSaida++, 0, "Tripulante %d concluiu todos os pedidos e está descansando!", trip->id);
-    attroff(COLOR_PAIR(1));
-    refresh();
-    pthread_mutex_unlock(&mutexTela);
+    sprintf(buffer_log, "Tripulante %d encerrou o expediente.", trip->id);
+    adicionar_log(buffer_log);
 
     return NULL;
 }

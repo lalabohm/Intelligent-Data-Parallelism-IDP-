@@ -1,23 +1,31 @@
-CC = gcc
+EXEC    = fora-no-espaco
+CC      = gcc
 
 SRC_DIR = src
-INCLUDE_DIR = include
+OBJ_DIR = obj
 
-CFLAGS = -Wall -I$(INCLUDE_DIR)
+CFLAGS  = -Wall -Iinclude -MMD -MP
+LIBS    = -lpthread -lncurses
 
-SRC = $(SRC_DIR)/main.c \
-      $(SRC_DIR)/mural.c \
-      $(SRC_DIR)/tripulante.c \
-      $(SRC_DIR)/chefe.c
+SRCS = $(wildcard $(SRC_DIR)/*.c)
+OBJS = $(patsubst $(SRC_DIR)/%.c, $(OBJ_DIR)/%.o, $(SRCS))
+DEPS = $(OBJS:.o=.d)
 
-EXEC = fora-no-espaco
+.PHONY: all clean run
 
 all: $(EXEC)
 
-$(EXEC): $(SRC)
-	$(CC) $(CFLAGS) $(SRC) -o $(EXEC) -lpthread -lncurses
+$(EXEC): $(OBJS)
+	$(CC) $(OBJS) -o $@ $(LIBS)
+
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c
+	@mkdir -p $(OBJ_DIR)
+	$(CC) $(CFLAGS) -c $< -o $@
 
 clean:
-	rm -f $(EXEC)
+	rm -rf $(EXEC) $(OBJ_DIR)
 
-.PHONY: all clean
+run: all
+	./$(EXEC)
+
+-include $(DEPS)

@@ -1,13 +1,22 @@
 #ifndef STRUCTS_H
 #define STRUCTS_H
 
-typedef struct pedido
+#include <pthread.h>
+
+typedef struct Pedido
 {
     char nome[50];
     int tempoPreparoIngredientes;
     int tempoCozimento;
-    struct pedido *proximo;
+    struct Pedido *proximo;
 } Pedido;
+
+typedef struct
+{
+    int id;
+    int ocupado;
+    Pedido *pedidoAtual;
+} Tripulante;
 
 typedef struct
 {
@@ -21,11 +30,19 @@ typedef struct
     int ocupado;
 } Cozinha;
 
-typedef struct
-{
-    int id;
-    int ocupado;
-    Pedido *pedidoAtual;
-} Tripulante;
+extern pthread_mutex_t mutexPedidos;
+extern pthread_mutex_t mutexBancadas;
+extern pthread_mutex_t mutexCozinhas;
+extern pthread_mutex_t mutexTela;
+extern pthread_mutex_t mutexComando;
+extern pthread_mutex_t mutexLog;
+extern pthread_cond_t condBancadas;
+extern pthread_cond_t condCozinhas;
 
-#endif
+extern Pedido *inicio;
+extern int muralAtivo;
+extern int comando_tripulante_id;
+
+void adicionar_log(const char *mensagem);
+
+#endif // STRUCTS_H
