@@ -4,6 +4,7 @@
 #include "mural.h"
 #include "structs.h"
 #include "tripulante.h"
+#include "chefe.h"
 
 #define NUM_TRIPULANTES 4
 #define NUM_BANCADAS 3

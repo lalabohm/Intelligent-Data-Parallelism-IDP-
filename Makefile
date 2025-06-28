@@ -5,7 +5,7 @@ INCLUDE_DIR = include
 
 CFLAGS = -Wall -I$(INCLUDE_DIR)
 
-SRC = $(SRC_DIR)/main.c $(SRC_DIR)/mural.c $(SRC_DIR)/tripulante.c
+SRC = $(SRC_DIR)/main.c $(SRC_DIR)/mural.c $(SRC_DIR)/tripulante.c $(SRC_DIR)/chefe.c
 
 EXEC = fora-no-espaco
 
