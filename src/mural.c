@@ -5,15 +5,17 @@
 #include <pthread.h>
 #include <ncurses.h>
 #include "mural.h"
+#include "structs.h"
 
 extern pthread_mutex_t mutexPedidos;
 extern pthread_mutex_t mutexTela;
 extern Pedido *inicio;
 extern int muralAtivo;
+extern int linhaSaida;
 
 int totalPedidos = 0;
 
-// Adiciona um novo pedido ao final da lista encadeada
+// Função para adicionar novo pedido ao final da lista
 void adicionarPedido(const char *nome, int preparo, int cozimento)
 {
     Pedido *novo = malloc(sizeof(Pedido));
@@ -40,20 +42,51 @@ void adicionarPedido(const char *nome, int preparo, int cozimento)
     pthread_mutex_unlock(&mutexPedidos);
 }
 
-// Simula a chegada dos pedidos com intervalo de tempo
+// Função que permite ao chefe inserir pratos manualmente
 void *muralDePedidos(void *arg)
 {
-    adicionarPedido("Meteorito Saboroso", 5, 3);
-    sleep(1);
-    adicionarPedido("Eclipse Energético", 4, 2);
-    sleep(1);
-    adicionarPedido("Carne Cósmica", 6, 3);
-    sleep(1);
-    adicionarPedido("Nugget de Supernova", 3, 2);
+    char *opcoes[] = {
+        "Meteorito Saboroso",
+        "Eclipse Energético",
+        "Carne Cósmica",
+        "Nugget de Supernova"};
+
+    int temposPreparo[] = {5, 4, 6, 3};
+    int temposCozimento[] = {3, 2, 3, 2};
+    int escolha;
+
+    while (1)
+    {
+        pthread_mutex_lock(&mutexTela);
+        mvprintw(linhaSaida++, 0, "Escolha um prato para adicionar ao mural:");
+        for (int j = 0; j < 4; j++)
+        {
+            mvprintw(linhaSaida++, 0, "%d. %s", j + 1, opcoes[j]);
+        }
+        mvprintw(linhaSaida++, 0, "5. Sair");
+        refresh();
+        pthread_mutex_unlock(&mutexTela);
+
+        echo();
+        scanw("%d", &escolha);
+        noecho();
+
+        if (escolha >= 1 && escolha <= 4)
+        {
+            adicionarPedido(opcoes[escolha - 1], temposPreparo[escolha - 1], temposCozimento[escolha - 1]);
+        }
+        else if (escolha == 5)
+        {
+            break; // Sai do loop
+        }
+
+        sleep(1);
+    }
+
     return NULL;
 }
 
-// Atualiza periodicamente a exibição do mural na tela
+// Exibe os pedidos atuais do mural na tela a cada 2 segundos
 void *exibirMuralPeriodicamente(void *arg)
 {
     while (muralAtivo)
@@ -63,22 +96,21 @@ void *exibirMuralPeriodicamente(void *arg)
 
         pthread_mutex_lock(&mutexTela);
 
-        // Limpa as linhas onde o mural será exibido
+        // Limpa as linhas do mural
         for (int i = 0; i < 15; i++)
             mvprintw(4 + i, 0, "                                         ");
 
-        attron(COLOR_PAIR(3)); // Título em amarelo
+        attron(COLOR_PAIR(3)); // Título amarelo
         mvprintw(4, 0, "--- Mural Atual ---");
         attroff(COLOR_PAIR(3));
 
         int linha = 5;
         while (temp != NULL)
         {
-            attron(COLOR_PAIR(2)); // Prato em magenta
+            attron(COLOR_PAIR(2)); // Pratos em rosa (magenta)
             mvprintw(linha++, 0, "Prato: %s | Preparo: %d | Cozimento: %d",
                      temp->nome, temp->tempoPreparoIngredientes, temp->tempoCozimento);
             attroff(COLOR_PAIR(2));
-
             temp = temp->proximo;
         }
 

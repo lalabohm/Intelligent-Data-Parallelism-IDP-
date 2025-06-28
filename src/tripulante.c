@@ -21,6 +21,7 @@ void *executarTripulante(void *arg)
 
     while (1)
     {
+        // Espera por um pedido atribuído
         if (trip->pedidoAtual == NULL)
         {
             sleep(1);
@@ -29,12 +30,14 @@ void *executarTripulante(void *arg)
 
         Pedido *pedidoAtual = trip->pedidoAtual;
 
-        // Busca por bancada livre
+        // ============================
+        // BUSCA POR BANCADA LIVRE
+        // ============================
         int bancadaUsada = -1;
         pthread_mutex_lock(&mutexBancadas);
         for (int i = 0; i < 3; i++)
         {
-            if (bancadas[i].ocupado == 0)
+            if (!bancadas[i].ocupado)
             {
                 bancadas[i].ocupado = 1;
                 bancadaUsada = bancadas[i].id;
@@ -46,7 +49,7 @@ void *executarTripulante(void *arg)
         if (bancadaUsada != -1)
         {
             pthread_mutex_lock(&mutexTela);
-            attron(COLOR_PAIR(2));
+            attron(COLOR_PAIR(2)); // Rosa (preparo)
             mvprintw(linhaSaida++, 0, "Tripulante %d começou o preparo do prato %s na bancada %d",
                      trip->id, pedidoAtual->nome, bancadaUsada);
             attroff(COLOR_PAIR(2));
@@ -55,16 +58,20 @@ void *executarTripulante(void *arg)
 
             sleep(pedidoAtual->tempoPreparoIngredientes);
 
+            // Libera bancada
             pthread_mutex_lock(&mutexBancadas);
             bancadas[bancadaUsada - 1].ocupado = 0;
             pthread_mutex_unlock(&mutexBancadas);
         }
 
+        // ============================
+        // BUSCA POR COZINHA LIVRE
+        // ============================
         int cozinhaUsada = -1;
         pthread_mutex_lock(&mutexCozinhas);
         for (int i = 0; i < 3; i++)
         {
-            if (cozinhas[i].ocupado == 0)
+            if (!cozinhas[i].ocupado)
             {
                 cozinhas[i].ocupado = 1;
                 cozinhaUsada = cozinhas[i].id;
@@ -76,7 +83,7 @@ void *executarTripulante(void *arg)
         if (cozinhaUsada != -1)
         {
             pthread_mutex_lock(&mutexTela);
-            attron(COLOR_PAIR(4));
+            attron(COLOR_PAIR(4)); // Azul (cozimento)
             mvprintw(linhaSaida++, 0, "Tripulante %d está cozinhando o prato %s na cozinha %d",
                      trip->id, pedidoAtual->nome, cozinhaUsada);
             attroff(COLOR_PAIR(4));
@@ -85,14 +92,19 @@ void *executarTripulante(void *arg)
 
             sleep(pedidoAtual->tempoCozimento);
 
+            // Libera cozinha
             pthread_mutex_lock(&mutexCozinhas);
             cozinhas[cozinhaUsada - 1].ocupado = 0;
             pthread_mutex_unlock(&mutexCozinhas);
         }
 
+        // ============================
+        // FINALIZAÇÃO DO PEDIDO
+        // ============================
         pthread_mutex_lock(&mutexTela);
-        mvprintw(linhaSaida++, 0, "Tripulante %d finalizou o prato %s",
-                 trip->id, pedidoAtual->nome);
+        attron(COLOR_PAIR(3)); // Vermelho (finalização)
+        mvprintw(linhaSaida++, 0, "Tripulante %d finalizou o prato %s", trip->id, pedidoAtual->nome);
+        attroff(COLOR_PAIR(3));
         refresh();
         pthread_mutex_unlock(&mutexTela);
 
@@ -100,18 +112,19 @@ void *executarTripulante(void *arg)
         trip->pedidoAtual = NULL;
         trip->ocupado = 0;
 
-        // Verifica se há mais pedidos no mural
+        // Se não há mais pedidos, encerra
         pthread_mutex_lock(&mutexPedidos);
-        if (inicio == NULL)
-        {
-            pthread_mutex_unlock(&mutexPedidos);
-            break;
-        }
+        int acabou = (inicio == NULL);
         pthread_mutex_unlock(&mutexPedidos);
+
+        if (acabou)
+            break;
     }
 
     pthread_mutex_lock(&mutexTela);
+    attron(COLOR_PAIR(1)); // Branco
     mvprintw(linhaSaida++, 0, "Tripulante %d concluiu todos os pedidos e está descansando!", trip->id);
+    attroff(COLOR_PAIR(1));
     refresh();
     pthread_mutex_unlock(&mutexTela);
 
