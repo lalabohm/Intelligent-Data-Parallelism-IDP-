@@ -14,6 +14,7 @@ pthread_mutex_t mutexBancadas = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexCozinhas = PTHREAD_MUTEX_INITIALIZER;
 
 Pedido *inicio = NULL;
+int muralAtivo = 1;
 
 Bancada bancadas[NUM_BANCADAS];
 Cozinha cozinhas[NUM_COZINHAS];
@@ -65,7 +66,7 @@ int main()
         pthread_join(threadsTripulantes[i], NULL);
     }
 
-    pthread_cancel(threadMuralExibicao);
+    muralAtivo = 0;
     pthread_join(threadMuralExibicao, NULL);
 
     printf("\nTodos os pedidos foram processados!\n");

@@ -7,6 +7,9 @@
 
 extern pthread_mutex_t mutexPedidos;
 extern Pedido *inicio;
+extern int muralAtivo;
+
+int totalPedidos = 0;
 
 void adicionarPedido(const char *nome, int preparo, int cozimento)
 {
@@ -29,6 +32,7 @@ void adicionarPedido(const char *nome, int preparo, int cozimento)
             temp = temp->proximo;
         temp->proximo = novo;
     }
+    totalPedidos++;
     pthread_mutex_unlock(&mutexPedidos);
 }
 
@@ -67,7 +71,7 @@ void *muralDePedidos(void *arg)
 
 void *exibirMuralPeriodicamente(void *arg)
 {
-    while (1)
+    while (muralAtivo)
     {
         pthread_mutex_lock(&mutexPedidos);
         Pedido *temp = inicio;
@@ -84,5 +88,5 @@ void *exibirMuralPeriodicamente(void *arg)
         pthread_mutex_unlock(&mutexPedidos);
         sleep(2);
     }
-    return NULL;
+    pthread_mutex_unlock(&mutexPedidos);
 }

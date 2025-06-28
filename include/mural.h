@@ -10,5 +10,6 @@ void listarPedidos();
 
 extern pthread_mutex_t mutexPedidos;
 extern Pedido *inicio;
+extern int totalPedidos;
 
 #endif
