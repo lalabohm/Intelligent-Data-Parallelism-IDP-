@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <pthread.h>
+#include <ncurses.h>
 #include "mural.h"
 #include "structs.h"
 #include "tripulante.h"
@@ -13,9 +14,11 @@
 pthread_mutex_t mutexPedidos = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexBancadas = PTHREAD_MUTEX_INITIALIZER;
 pthread_mutex_t mutexCozinhas = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t mutexTela = PTHREAD_MUTEX_INITIALIZER;
 
 Pedido *inicio = NULL;
 int muralAtivo = 1;
+int linhaSaida = 10;
 
 Bancada bancadas[NUM_BANCADAS];
 Cozinha cozinhas[NUM_COZINHAS];
@@ -28,9 +31,18 @@ int main()
     pthread_t threadsTripulantes[NUM_TRIPULANTES];
     Tripulante tripulantes[NUM_TRIPULANTES];
 
-    printf("****************************\n");
-    printf("BEM-VINDO AO FORA NO ESPAÇO!\n");
-    printf("****************************\n");
+    initscr();
+    noecho();
+    curs_set(FALSE);
+    clear();
+    refresh();
+
+    pthread_mutex_lock(&mutexTela);
+    mvprintw(0, 0, "****************************");
+    mvprintw(1, 0, "BEM-VINDO AO FORA NO ESPAÇO!");
+    mvprintw(2, 0, "****************************");
+    refresh();
+    pthread_mutex_unlock(&mutexTela);
 
     for (int i = 0; i < NUM_BANCADAS; i++)
     {
@@ -51,16 +63,16 @@ int main()
         tripulantes[i].pedidoAtual = NULL;
     }
 
-    // Criação da thread do chefe, que distribui os pedidos aos tripulantes
     pthread_create(&threadChefe, NULL, chefeDeCozinha, tripulantes);
-
-    // Criação da thread que exibe periodicamente o mural de pedidos
     pthread_create(&threadMuralExibicao, NULL, exibirMuralPeriodicamente, NULL);
 
-    // Criação da thread que gera e adiciona os pedidos no mural
     if (pthread_create(&threadMural, NULL, muralDePedidos, NULL))
     {
-        fprintf(stderr, "Erro ao criar a thread do mural...\n");
+        pthread_mutex_lock(&mutexTela);
+        mvprintw(4, 0, "Erro ao criar a thread do mural...");
+        refresh();
+        pthread_mutex_unlock(&mutexTela);
+        endwin();
         return 1;
     }
 
@@ -77,10 +89,17 @@ int main()
     }
 
     muralAtivo = 0;
+
     pthread_join(threadMuralExibicao, NULL);
     pthread_join(threadChefe, NULL);
 
-    printf("\nTodos os pedidos foram processados!\n");
+    pthread_mutex_lock(&mutexTela);
+    mvprintw(20, 0, "Todos os pedidos foram processados!");
+    refresh();
+    pthread_mutex_unlock(&mutexTela);
+
+    getch();
+    endwin();
 
     return 0;
 }

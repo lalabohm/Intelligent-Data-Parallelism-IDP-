@@ -2,12 +2,15 @@
 #include <stdlib.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <ncurses.h>
 #include "mural.h"
 #include "structs.h"
 
 extern pthread_mutex_t mutexPedidos;
 extern pthread_mutex_t mutexBancadas;
 extern pthread_mutex_t mutexCozinhas;
+extern pthread_mutex_t mutexTela;
+extern int linhaSaida;
 extern Bancada bancadas[];
 extern Cozinha cozinhas[];
 
@@ -25,7 +28,6 @@ void *executarTripulante(void *arg)
 
         Pedido *pedidoAtual = trip->pedidoAtual;
 
-        // Preparo
         int bancadaUsada = -1;
         pthread_mutex_lock(&mutexBancadas);
         for (int i = 0; i < 3; i++)
@@ -41,14 +43,18 @@ void *executarTripulante(void *arg)
 
         if (bancadaUsada != -1)
         {
-            printf("Tripulante %d começou o preparo do prato %s na bancada %d\n", trip->id, pedidoAtual->nome, bancadaUsada);
+            pthread_mutex_lock(&mutexTela);
+            mvprintw(linhaSaida++, 0, "Tripulante %d começou o preparo do prato %s na bancada %d", trip->id, pedidoAtual->nome, bancadaUsada);
+            refresh();
+            pthread_mutex_unlock(&mutexTela);
+
             sleep(pedidoAtual->tempoPreparoIngredientes);
+
             pthread_mutex_lock(&mutexBancadas);
             bancadas[bancadaUsada - 1].ocupado = 0;
             pthread_mutex_unlock(&mutexBancadas);
         }
 
-        // Cozimento
         int cozinhaUsada = -1;
         pthread_mutex_lock(&mutexCozinhas);
         for (int i = 0; i < 3; i++)
@@ -64,20 +70,27 @@ void *executarTripulante(void *arg)
 
         if (cozinhaUsada != -1)
         {
-            printf("Tripulante %d está cozinhando o prato %s na cozinha %d\n", trip->id, pedidoAtual->nome, cozinhaUsada);
+            pthread_mutex_lock(&mutexTela);
+            mvprintw(linhaSaida++, 0, "Tripulante %d está cozinhando o prato %s na cozinha %d", trip->id, pedidoAtual->nome, cozinhaUsada);
+            refresh();
+            pthread_mutex_unlock(&mutexTela);
+
             sleep(pedidoAtual->tempoCozimento);
+
             pthread_mutex_lock(&mutexCozinhas);
             cozinhas[cozinhaUsada - 1].ocupado = 0;
             pthread_mutex_unlock(&mutexCozinhas);
         }
 
-        printf("Tripulante %d finalizou o prato %s\n", trip->id, pedidoAtual->nome);
+        pthread_mutex_lock(&mutexTela);
+        mvprintw(linhaSaida++, 0, "Tripulante %d finalizou o prato %s", trip->id, pedidoAtual->nome);
+        refresh();
+        pthread_mutex_unlock(&mutexTela);
 
         free(pedidoAtual);
         trip->pedidoAtual = NULL;
         trip->ocupado = 0;
 
-        // Verifica se ainda há pedidos.
         pthread_mutex_lock(&mutexPedidos);
         if (inicio == NULL)
         {
@@ -87,6 +100,10 @@ void *executarTripulante(void *arg)
         pthread_mutex_unlock(&mutexPedidos);
     }
 
-    printf("Tripulante %d concluiu todos os pedidos e está descansando!\n", trip->id);
+    pthread_mutex_lock(&mutexTela);
+    mvprintw(linhaSaida++, 0, "Tripulante %d concluiu todos os pedidos e está descansando!", trip->id);
+    refresh();
+    pthread_mutex_unlock(&mutexTela);
+
     return NULL;
 }

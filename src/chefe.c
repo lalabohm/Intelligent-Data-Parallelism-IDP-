@@ -2,17 +2,15 @@
 #include <stdio.h>
 #include <unistd.h>
 #include <pthread.h>
+#include <ncurses.h>
 #include "structs.h"
 
 extern Pedido *inicio;
 extern pthread_mutex_t mutexPedidos;
 extern pthread_mutex_t mutexBancadas;
+extern pthread_mutex_t mutexTela;
 extern int muralAtivo;
-
-/**
- * Função da thread chefeDeCozinha:
- * Responsável por distribuir os pedidos do mural entre os tripulantes livres.
- */
+extern int linhaSaida;
 
 void *chefeDeCozinha(void *arg)
 {
@@ -21,6 +19,7 @@ void *chefeDeCozinha(void *arg)
     while (muralAtivo)
     {
         pthread_mutex_lock(&mutexPedidos);
+
         if (inicio == NULL)
         {
             pthread_mutex_unlock(&mutexPedidos);
@@ -48,13 +47,16 @@ void *chefeDeCozinha(void *arg)
         }
 
         inicio = inicio->proximo;
+
         tripulantes[tripulanteLivre].pedidoAtual = pedido;
         tripulantes[tripulanteLivre].ocupado = 1;
 
-        printf("O chefe atribuiu o prato %s para Tripulante %d\n", pedido->nome, tripulantes[tripulanteLivre].id);
+        pthread_mutex_lock(&mutexTela);
+        mvprintw(linhaSaida++, 0, "O chefe atribuiu o prato %s para Tripulante %d", pedido->nome, tripulantes[tripulanteLivre].id);
+        refresh();
+        pthread_mutex_unlock(&mutexTela);
 
         pthread_mutex_unlock(&mutexPedidos);
-
         sleep(1);
     }
 
