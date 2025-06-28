@@ -24,11 +24,11 @@ A solução foi desenvolvida com uma arquitetura multithread que separa as respo
 
 - **Threads criadas**:
 
-  - `gerenciadorDeTela`: Única thread responsável por toda a renderização na tela com `ncurses`. [cite_start]Ela lê o estado do jogo (pedidos, recursos, logs) de forma segura e atualiza a interface periodicamente. [cite: 36]
-  - [cite_start]`gerenciadorDeInput`: Thread dedicada a capturar as entradas do teclado do usuário (`getch`) de forma não bloqueante para o resto do sistema. [cite: 52, 54]
-  - [cite_start]`geradorDePedidos`: Simula o "Mural de Pedidos", criando novas ordens de pratos em intervalos de tempo para manter a simulação dinâmica. [cite: 33]
-  - [cite_start]`chefeDeCozinha`: Atua como o "cérebro" da lógica, consumindo os comandos do usuário (capturados pelo `gerenciadorDeInput`) e atribuindo pedidos aos tripulantes disponíveis, validando também a disponibilidade de recursos. [cite: 51]
-  - [cite_start]`executarTripulante` (múltiplas): Cada uma representa um tripulante, executando as tarefas de preparo e cozimento e gerenciando o uso dos recursos (bancadas e cozinhas). [cite: 42]
+  - `gerenciadorDeTela`: Única thread responsável por toda a renderização na tela com `ncurses`. Ela lê o estado do jogo (pedidos, recursos, logs) de forma segura e atualiza a interface periodicamente. 
+  - `gerenciadorDeInput`: Thread dedicada a capturar as entradas do teclado do usuário (`getch`) de forma não bloqueante para o resto do sistema. 
+  - `geradorDePedidos`: Simula o "Mural de Pedidos", criando novas ordens de pratos em intervalos de tempo para manter a simulação dinâmica. 
+  - `chefeDeCozinha`: Atua como o "cérebro" da lógica, consumindo os comandos do usuário (capturados pelo `gerenciadorDeInput`) e atribuindo pedidos aos tripulantes disponíveis, validando também a disponibilidade de recursos. 
+  - `executarTripulante` (múltiplas): Cada uma representa um tripulante, executando as tarefas de preparo e cozimento e gerenciando o uso dos recursos (bancadas e cozinhas). 
 
 - **Sincronização**:
 
@@ -91,6 +91,6 @@ make clean
     - Digite `s` para iniciar a simulação.
 
 2.  **Durante a Simulação:** A tela principal será exibida.
-    - [cite_start]**Seu Papel:** Você atua como o **Chefe da Cozinha**. [cite: 51]
-    - [cite_start]**Comandos:** Para atribuir o primeiro pedido da fila a um tripulante, pressione a tecla numérica correspondente ao tripulante (de 1 a 4). [cite: 52, 54]
-    - **Objetivo:** Atenda a todos os pedidos. [cite_start]O jogo termina quando todos os pratos forem entregues ou se a fila de pedidos pendentes ficar muito grande. [cite: 28]
+    - **Seu Papel:** Você atua como o **Chefe da Cozinha**. 
+    - **Comandos:** Para atribuir o primeiro pedido da fila a um tripulante, pressione a tecla numérica correspondente ao tripulante (de 1 a 4). 
+    - **Objetivo:** Atenda a todos os pedidos. O jogo termina quando todos os pratos forem entregues ou se a fila de pedidos pendentes ficar muito grande. 
