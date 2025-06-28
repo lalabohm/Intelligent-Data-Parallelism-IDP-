@@ -33,6 +33,7 @@ int comando_tripulante_id = -1;
 
 Bancada bancadas[NUM_BANCADAS];
 Cozinha cozinhas[NUM_COZINHAS];
+Tripulante tripulantes[NUM_TRIPULANTES];
 
 char mensagens_log[LOG_MAX_MESSAGES][128];
 int num_logs = 0;
@@ -70,15 +71,11 @@ void *geradorDePedidos(void *arg)
     while (muralAtivo)
     {
         sleep(10 + rand() % 10);
-
         if (!muralAtivo)
             break;
-
         int prato_idx = rand() % num_pratos_possiveis;
         const Pedido *prato_gerado = &pratos_possiveis[prato_idx];
-
         adicionarPedido(prato_gerado->nome, prato_gerado->tempoPreparoIngredientes, prato_gerado->tempoCozimento);
-
         char buffer_log[100];
         sprintf(buffer_log, "NOVO PEDIDO: '%s' chegou!", prato_gerado->nome);
         adicionar_log(buffer_log);
@@ -93,10 +90,8 @@ void *gerenciadorDeInput(void *arg)
     while (muralAtivo)
     {
         ch = getch();
-
         if (!muralAtivo)
             break;
-
         if (ch >= '1' && ch <= '0' + NUM_TRIPULANTES)
         {
             pthread_mutex_lock(&mutexComando);
@@ -127,7 +122,6 @@ void inicializarNcurses()
     noecho();
     curs_set(FALSE);
     keypad(stdscr, TRUE);
-
     init_pair(1, COLOR_WHITE, COLOR_BLACK);
     init_pair(2, COLOR_MAGENTA, COLOR_BLACK);
     init_pair(3, COLOR_RED, COLOR_BLACK);
@@ -142,26 +136,43 @@ int main()
     setlocale(LC_ALL, "pt_BR.UTF-8");
 
     printf("--- Restaurante Fora no Espaço ---\n");
-    printf("Adicione os pedidos iniciais. Digite 'sair' no nome do prato para começar a simulação.\n\n");
 
-    char nome[50];
-    int preparo, cozimento;
-    while (1)
+    char escolha;
+    do
     {
-        printf("Nome do prato (ou 'sair'): ");
-        if (scanf("%49s", nome) != 1)
-            break;
-        if (strcmp(nome, "sair") == 0)
-            break;
-        printf("Tempo de preparo: ");
-        if (scanf("%d", &preparo) != 1)
-            break;
-        printf("Tempo de cozimento: ");
-        if (scanf("%d", &cozimento) != 1)
-            break;
-        adicionarPedido(nome, preparo, cozimento);
-        printf("-> Pedido '%s' adicionado!\n\n", nome);
-    }
+        printf("\nO que você deseja fazer?\n");
+        printf("  [a] Adicionar um pedido inicial\n");
+        printf("  [s] Sair e iniciar a simulação\n");
+        printf("Escolha uma opção: ");
+
+        scanf(" %c", &escolha);
+
+        if (escolha == 'a')
+        {
+            char nome[50];
+            int preparo, cozimento;
+
+            printf("  Nome do prato: ");
+            if (scanf("%49s", nome) != 1)
+                break;
+
+            printf("  Tempo de preparo: ");
+            if (scanf("%d", &preparo) != 1)
+                break;
+
+            printf("  Tempo de cozimento: ");
+            if (scanf("%d", &cozimento) != 1)
+                break;
+
+            adicionarPedido(nome, preparo, cozimento);
+            printf("  -> Pedido '%s' adicionado com sucesso!\n", nome);
+        }
+        else if (escolha != 's')
+        {
+            printf("  Opção inválida. Tente novamente.\n");
+        }
+
+    } while (escolha != 's');
 
     printf("\nIniciando a simulação...\n");
     sleep(1);
@@ -178,7 +189,6 @@ int main()
     pthread_cond_init(&condBancadas, NULL);
     pthread_cond_init(&condCozinhas, NULL);
 
-    Tripulante tripulantes[NUM_TRIPULANTES];
     for (int i = 0; i < NUM_TRIPULANTES; i++)
     {
         tripulantes[i] = (Tripulante){.id = i + 1, .ocupado = 0, .pedidoAtual = NULL};
