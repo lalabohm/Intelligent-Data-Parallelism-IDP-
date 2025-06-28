@@ -24,8 +24,9 @@ int main()
 {
     pthread_t threadMural;
     pthread_t threadMuralExibicao;
-    Tripulante tripulantes[NUM_TRIPULANTES];
+    pthread_t threadChefe;
     pthread_t threadsTripulantes[NUM_TRIPULANTES];
+    Tripulante tripulantes[NUM_TRIPULANTES];
 
     printf("****************************\n");
     printf("BEM-VINDO AO FORA NO ESPAÇO!\n");
@@ -43,20 +44,28 @@ int main()
         cozinhas[i].ocupado = 0;
     }
 
-    pthread_create(&threadMuralExibicao, NULL, exibirMuralPeriodicamente, NULL);
-
-    if (pthread_create(&threadMural, NULL, muralDePedidos, NULL))
-    {
-        fprintf(stderr, "Erro ao criar a thread do nural...\n");
-        return 1;
-    }
-
     for (int i = 0; i < NUM_TRIPULANTES; i++)
     {
         tripulantes[i].id = i + 1;
         tripulantes[i].ocupado = 0;
         tripulantes[i].pedidoAtual = NULL;
+    }
 
+    // Criação da thread do chefe, que distribui os pedidos aos tripulantes
+    pthread_create(&threadChefe, NULL, chefeDeCozinha, tripulantes);
+
+    // Criação da thread que exibe periodicamente o mural de pedidos
+    pthread_create(&threadMuralExibicao, NULL, exibirMuralPeriodicamente, NULL);
+
+    // Criação da thread que gera e adiciona os pedidos no mural
+    if (pthread_create(&threadMural, NULL, muralDePedidos, NULL))
+    {
+        fprintf(stderr, "Erro ao criar a thread do mural...\n");
+        return 1;
+    }
+
+    for (int i = 0; i < NUM_TRIPULANTES; i++)
+    {
         pthread_create(&threadsTripulantes[i], NULL, executarTripulante, &tripulantes[i]);
     }
 
@@ -69,6 +78,7 @@ int main()
 
     muralAtivo = 0;
     pthread_join(threadMuralExibicao, NULL);
+    pthread_join(threadChefe, NULL);
 
     printf("\nTodos os pedidos foram processados!\n");
 

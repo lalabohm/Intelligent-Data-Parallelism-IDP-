@@ -16,3 +16,5 @@ $(EXEC): $(SRC)
 
 clean:
 	rm -f $(EXEC)
+
+.PHONY: all clean

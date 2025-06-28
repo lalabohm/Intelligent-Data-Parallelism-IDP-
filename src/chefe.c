@@ -4,9 +4,15 @@
 #include <pthread.h>
 #include "structs.h"
 
-extern Pedido *inicio extern pthread_mutex_t mutexPedidos;
+extern Pedido *inicio;
+extern pthread_mutex_t mutexPedidos;
 extern pthread_mutex_t mutexBancadas;
 extern int muralAtivo;
+
+/**
+ * Função da thread chefeDeCozinha:
+ * Responsável por distribuir os pedidos do mural entre os tripulantes livres.
+ */
 
 void *chefeDeCozinha(void *arg)
 {
@@ -27,7 +33,7 @@ void *chefeDeCozinha(void *arg)
         int tripulanteLivre = -1;
         for (int i = 0; i < 4; i++)
         {
-            if (tripulantes[i].ocupapdo == 0)
+            if (tripulantes[i].ocupado == 0)
             {
                 tripulanteLivre = i;
                 break;
@@ -49,7 +55,7 @@ void *chefeDeCozinha(void *arg)
 
         pthread_mutex_unlock(&mutexPedidos);
 
-        sleep(1)
+        sleep(1);
     }
 
     return NULL;

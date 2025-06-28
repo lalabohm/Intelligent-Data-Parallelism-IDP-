@@ -11,6 +11,7 @@ extern int muralAtivo;
 
 int totalPedidos = 0;
 
+// Função que adiciona um novo pedido ao mural
 void adicionarPedido(const char *nome, int preparo, int cozimento)
 {
     Pedido *novo = (Pedido *)malloc(sizeof(Pedido));
@@ -36,27 +37,7 @@ void adicionarPedido(const char *nome, int preparo, int cozimento)
     pthread_mutex_unlock(&mutexPedidos);
 }
 
-void listarPedidos()
-{
-    pthread_mutex_lock(&mutexPedidos);
-    Pedido *temp = inicio;
-
-    if (temp == NULL)
-    {
-        printf("***Mural vazio!***\n");
-    }
-    else
-    {
-        printf("***Pedidos no mural: ****\n");
-        while (temp != NULL)
-        {
-            printf("Nome do prato: %s | Preparo: %d | Cozimento: %d\n", temp->nome, temp->tempoPreparoIngredientes, temp->tempoCozimento);
-            temp = temp->proximo;
-        }
-    }
-    pthread_mutex_unlock(&mutexPedidos);
-}
-
+// Thread responsável por adicionar os pedidos ao mural de forma sequencial com atraso
 void *muralDePedidos(void *arg)
 {
     adicionarPedido("Meteorito Saboroso", 5, 3);
@@ -68,7 +49,7 @@ void *muralDePedidos(void *arg)
     adicionarPedido("Nugget de Supernova", 3, 2);
     return NULL;
 }
-
+// Thread que exibe o conteúdo atual do mural periodicamente.
 void *exibirMuralPeriodicamente(void *arg)
 {
     while (muralAtivo)
@@ -88,5 +69,5 @@ void *exibirMuralPeriodicamente(void *arg)
         pthread_mutex_unlock(&mutexPedidos);
         sleep(2);
     }
-    pthread_mutex_unlock(&mutexPedidos);
+    return NULL;
 }
