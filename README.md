@@ -44,6 +44,22 @@ O programa realiza as seguintes tarefas:
   - `chefe.c`: lógica do chefe de cozinha.
   - `structs.h`: definição das estruturas de dados.
 
+## 📺 Interface com `ncurses`
+
+Este projeto utiliza a biblioteca `ncurses` para criar uma interface visual interativa no terminal.
+
+- Exibição dinâmica com `mvprintw` e `refresh`.
+- Atualização limpa das seções com controle de linhas.
+- Uso de `setlocale(LC_ALL, "")` para permitir caracteres acentuados.
+
+> 📦 **Dependência**: é necessário ter a biblioteca `ncurses` instalada no sistema.
+
+### Instalação no Ubuntu/Debian:
+
+```bash
+sudo apt-get install libncurses5-dev libncursesw5-dev
+```
+
 ## 🧪 Instruções de Compilação e Execução
 
 ### Pré-requisitos:
