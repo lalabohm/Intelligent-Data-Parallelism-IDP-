@@ -21,6 +21,7 @@ Cozinha cozinhas[NUM_COZINHAS];
 int main()
 {
     pthread_t threadMural;
+    pthread_t threadMuralExibicao;
     Tripulante tripulantes[NUM_TRIPULANTES];
     pthread_t threadsTripulantes[NUM_TRIPULANTES];
 
@@ -40,13 +41,15 @@ int main()
         cozinhas[i].ocupado = 0;
     }
 
+    pthread_create(&threadMuralExibicao, NULL, exibirMuralPeriodicamente, NULL);
+
     if (pthread_create(&threadMural, NULL, muralDePedidos, NULL))
     {
         fprintf(stderr, "Erro ao criar a thread do nural...\n");
         return 1;
     }
 
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < NUM_TRIPULANTES; i++)
     {
         tripulantes[i].id = i + 1;
         tripulantes[i].ocupado = 0;
@@ -62,9 +65,10 @@ int main()
         pthread_join(threadsTripulantes[i], NULL);
     }
 
-    printf("\nTodos os pedidos foram processados!\n");
+    pthread_cancel(threadMuralExibicao);
+    pthread_join(threadMuralExibicao, NULL);
 
-    listarPedidos();
+    printf("\nTodos os pedidos foram processados!\n");
 
     return 0;
 }

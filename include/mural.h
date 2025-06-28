@@ -4,6 +4,7 @@
 #include "structs.h"
 
 void *muralDePedidos(void *arg);
+void *exibirMuralPeriodicamente(void *arg);
 void adicionarPedido(const char *nome, int preparo, int cozimento);
 void listarPedidos();
 
