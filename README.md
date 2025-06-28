@@ -20,29 +20,27 @@ O programa realiza as seguintes tarefas:
 
 ## 🛠️ Descrição da Implementação
 
+A solução foi desenvolvida com uma arquitetura multithread que separa as responsabilidades de lógica e interface para garantir a sincronização e evitar condições de corrida.
+
 - **Threads criadas**:
 
-  - `muralDePedidos`: adiciona pratos no mural.
-  - `exibirMuralPeriodicamente`: imprime o mural a cada 2 segundos.
-  - `chefeDeCozinha`: verifica se há pedidos e tripulantes livres e os associa.
-  - `executarTripulante`: realiza o preparo e o cozimento do prato atribuído.
+  - `gerenciadorDeTela`: Única thread responsável por toda a renderização na tela com `ncurses`. [cite_start]Ela lê o estado do jogo (pedidos, recursos, logs) de forma segura e atualiza a interface periodicamente. [cite: 36]
+  - [cite_start]`gerenciadorDeInput`: Thread dedicada a capturar as entradas do teclado do usuário (`getch`) de forma não bloqueante para o resto do sistema. [cite: 52, 54]
+  - [cite_start]`geradorDePedidos`: Simula o "Mural de Pedidos", criando novas ordens de pratos em intervalos de tempo para manter a simulação dinâmica. [cite: 33]
+  - [cite_start]`chefeDeCozinha`: Atua como o "cérebro" da lógica, consumindo os comandos do usuário (capturados pelo `gerenciadorDeInput`) e atribuindo pedidos aos tripulantes disponíveis, validando também a disponibilidade de recursos. [cite: 51]
+  - [cite_start]`executarTripulante` (múltiplas): Cada uma representa um tripulante, executando as tarefas de preparo e cozimento e gerenciando o uso dos recursos (bancadas e cozinhas). [cite: 42]
 
 - **Sincronização**:
 
-  - `pthread_mutex_t` para controle do mural, bancadas e cozinhas.
-
-- **Estruturas**:
-
-  - `Pedido`: nome, tempo de preparo e tempo de cozimento.
-  - `Tripulante`: id, estado de ocupação, prato atual.
-  - `Bancada` e `Cozinha`: controle de disponibilidade.
+  - `pthread_mutex_t`: Utilizado para garantir acesso exclusivo a todos os recursos compartilhados: a lista de pedidos, os arrays de bancadas, cozinhas e tripulantes, o buffer de comando do usuário e o painel de logs.
+  - `pthread_cond_t`: Essencial para a eficiência do sistema. Os tripulantes usam variáveis de condição para esperar (dormir) por bancadas e cozinhas livres, evitando o desperdício de CPU com _busy-waiting_ e implementando um sistema de fila natural.
 
 - **Modularização**:
-  - `main.c`: inicializa e gerencia threads.
-  - `mural.c`: gerenciamento do mural de pedidos.
-  - `tripulante.c`: lógica dos tripulantes.
-  - `chefe.c`: lógica do chefe de cozinha.
-  - `structs.h`: definição das estruturas de dados.
+  - `main.c`: Orquestra a simulação, inicializando os recursos, as threads e gerenciando o ciclo de vida do programa. Também contém as implementações das threads de input e do gerador de pedidos.
+  - `mural.c`: Contém a implementação da thread de tela (`gerenciadorDeTela`) e a função para adicionar pedidos.
+  - `tripulante.c`: Contém a lógica de trabalho dos tripulantes.
+  - `chefe.c`: Contém a lógica de atribuição de tarefas do chefe.
+  - `structs.h`: Centraliza a definição de todas as estruturas de dados e a declaração de variáveis globais compartilhadas.
 
 ## 📺 Interface com `ncurses`
 
@@ -84,3 +82,15 @@ make
 ```bash
 make clean
 ```
+
+## 🎮 Como Jogar
+
+1.  **Fase de Setup:** Ao iniciar o programa, você pode opcionalmente adicionar pedidos customizados na fila.
+
+    - Digite `a` para adicionar um novo prato (informe nome, tempo de preparo e cozimento).
+    - Digite `s` para iniciar a simulação.
+
+2.  **Durante a Simulação:** A tela principal será exibida.
+    - [cite_start]**Seu Papel:** Você atua como o **Chefe da Cozinha**. [cite: 51]
+    - [cite_start]**Comandos:** Para atribuir o primeiro pedido da fila a um tripulante, pressione a tecla numérica correspondente ao tripulante (de 1 a 4). [cite: 52, 54]
+    - **Objetivo:** Atenda a todos os pedidos. [cite_start]O jogo termina quando todos os pratos forem entregues ou se a fila de pedidos pendentes ficar muito grande. [cite: 28]
