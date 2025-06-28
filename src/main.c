@@ -35,18 +35,33 @@ int main()
     pthread_t threadsTripulantes[NUM_TRIPULANTES];
     Tripulante tripulantes[NUM_TRIPULANTES];
 
-    // Inicialização do ncurses
+    // Inicialização do ncurses com cores
     initscr();
+    start_color();
+    init_pair(1, COLOR_WHITE, COLOR_BLACK);
+    init_pair(2, COLOR_MAGENTA, COLOR_BLACK);
+    init_pair(3, COLOR_RED, COLOR_BLACK);
+    init_pair(4, COLOR_BLUE, COLOR_BLACK);
+
     noecho();
     curs_set(FALSE);
     clear();
     refresh();
 
-    // Mensagem de boas-vindas
     pthread_mutex_lock(&mutexTela);
+
+    attron(COLOR_PAIR(1));
     mvprintw(0, 0, "****************************");
+    attroff(COLOR_PAIR(1));
+
+    attron(COLOR_PAIR(2));
     mvprintw(1, 0, "BEM-VINDO AO FORA NO ESPAÇO!");
+    attroff(COLOR_PAIR(2));
+
+    attron(COLOR_PAIR(1));
     mvprintw(2, 0, "****************************");
+    attroff(COLOR_PAIR(1));
+
     refresh();
     pthread_mutex_unlock(&mutexTela);
 
@@ -70,18 +85,18 @@ int main()
         tripulantes[i].pedidoAtual = NULL;
     }
 
-    // Inicia threads principais
+    // Cria threads principais
     pthread_create(&threadChefe, NULL, chefeDeCozinha, tripulantes);
     pthread_create(&threadMuralExibicao, NULL, exibirMuralPeriodicamente, NULL);
     pthread_create(&threadMural, NULL, muralDePedidos, NULL);
 
-    // Tripulantes executam seus pedidos
+    // Cria threads dos tripulantes
     for (int i = 0; i < NUM_TRIPULANTES; i++)
     {
         pthread_create(&threadsTripulantes[i], NULL, executarTripulante, &tripulantes[i]);
     }
 
-    // Aguarda fim das threads
+    // Aguarda término das threads
     pthread_join(threadMural, NULL);
     for (int i = 0; i < NUM_TRIPULANTES; i++)
     {
@@ -89,13 +104,13 @@ int main()
     }
 
     muralAtivo = 0;
-
     pthread_join(threadMuralExibicao, NULL);
     pthread_join(threadChefe, NULL);
 
-    // Mensagem final
     pthread_mutex_lock(&mutexTela);
+    attron(COLOR_PAIR(3));
     mvprintw(linhaSaida++, 0, "Todos os pedidos foram processados!");
+    attroff(COLOR_PAIR(3));
     refresh();
     pthread_mutex_unlock(&mutexTela);
 

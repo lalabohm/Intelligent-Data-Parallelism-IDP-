@@ -13,6 +13,7 @@ extern pthread_mutex_t mutexTela;
 extern int linhaSaida;
 extern Bancada bancadas[];
 extern Cozinha cozinhas[];
+extern Pedido *inicio;
 
 void *executarTripulante(void *arg)
 {
@@ -28,7 +29,7 @@ void *executarTripulante(void *arg)
 
         Pedido *pedidoAtual = trip->pedidoAtual;
 
-        // Busca por bancada livre para preparar o prato
+        // Busca por bancada livre
         int bancadaUsada = -1;
         pthread_mutex_lock(&mutexBancadas);
         for (int i = 0; i < 3; i++)
@@ -45,8 +46,10 @@ void *executarTripulante(void *arg)
         if (bancadaUsada != -1)
         {
             pthread_mutex_lock(&mutexTela);
+            attron(COLOR_PAIR(2));
             mvprintw(linhaSaida++, 0, "Tripulante %d começou o preparo do prato %s na bancada %d",
                      trip->id, pedidoAtual->nome, bancadaUsada);
+            attroff(COLOR_PAIR(2));
             refresh();
             pthread_mutex_unlock(&mutexTela);
 
@@ -57,7 +60,6 @@ void *executarTripulante(void *arg)
             pthread_mutex_unlock(&mutexBancadas);
         }
 
-        // Busca por cozinha livre para cozinhar o prato
         int cozinhaUsada = -1;
         pthread_mutex_lock(&mutexCozinhas);
         for (int i = 0; i < 3; i++)
@@ -74,8 +76,10 @@ void *executarTripulante(void *arg)
         if (cozinhaUsada != -1)
         {
             pthread_mutex_lock(&mutexTela);
+            attron(COLOR_PAIR(4));
             mvprintw(linhaSaida++, 0, "Tripulante %d está cozinhando o prato %s na cozinha %d",
                      trip->id, pedidoAtual->nome, cozinhaUsada);
+            attroff(COLOR_PAIR(4));
             refresh();
             pthread_mutex_unlock(&mutexTela);
 
@@ -86,7 +90,6 @@ void *executarTripulante(void *arg)
             pthread_mutex_unlock(&mutexCozinhas);
         }
 
-        // Finalização do pedido
         pthread_mutex_lock(&mutexTela);
         mvprintw(linhaSaida++, 0, "Tripulante %d finalizou o prato %s",
                  trip->id, pedidoAtual->nome);
@@ -107,7 +110,6 @@ void *executarTripulante(void *arg)
         pthread_mutex_unlock(&mutexPedidos);
     }
 
-    // Finaliza a thread do tripulante
     pthread_mutex_lock(&mutexTela);
     mvprintw(linhaSaida++, 0, "Tripulante %d concluiu todos os pedidos e está descansando!", trip->id);
     refresh();

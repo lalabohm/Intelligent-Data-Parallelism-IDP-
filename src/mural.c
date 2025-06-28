@@ -67,13 +67,18 @@ void *exibirMuralPeriodicamente(void *arg)
         for (int i = 0; i < 15; i++)
             mvprintw(4 + i, 0, "                                         ");
 
-        mvprintw(4, 0, "---Mural Atual---");
+        attron(COLOR_PAIR(3)); // Título em amarelo
+        mvprintw(4, 0, "--- Mural Atual ---");
+        attroff(COLOR_PAIR(3));
 
         int linha = 5;
         while (temp != NULL)
         {
+            attron(COLOR_PAIR(2)); // Prato em magenta
             mvprintw(linha++, 0, "Prato: %s | Preparo: %d | Cozimento: %d",
                      temp->nome, temp->tempoPreparoIngredientes, temp->tempoCozimento);
+            attroff(COLOR_PAIR(2));
+
             temp = temp->proximo;
         }
 

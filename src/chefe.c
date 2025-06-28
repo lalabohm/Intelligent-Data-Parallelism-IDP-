@@ -20,7 +20,6 @@ void *chefeDeCozinha(void *arg)
     {
         pthread_mutex_lock(&mutexPedidos);
 
-        // Verifica se há pedidos no mural
         if (inicio == NULL)
         {
             pthread_mutex_unlock(&mutexPedidos);
@@ -30,7 +29,6 @@ void *chefeDeCozinha(void *arg)
 
         Pedido *pedido = inicio;
 
-        // Procura um tripulante disponível
         int tripulanteLivre = -1;
         for (int i = 0; i < 4; i++)
         {
@@ -41,7 +39,6 @@ void *chefeDeCozinha(void *arg)
             }
         }
 
-        // Se não houver nenhum disponível, espera
         if (tripulanteLivre == -1)
         {
             pthread_mutex_unlock(&mutexPedidos);
@@ -54,9 +51,11 @@ void *chefeDeCozinha(void *arg)
         tripulantes[tripulanteLivre].pedidoAtual = pedido;
         tripulantes[tripulanteLivre].ocupado = 1;
 
-        // Exibe a atribuição na tela
+        // Exibe a atribuição com cor rosa (magenta)
         pthread_mutex_lock(&mutexTela);
+        attron(COLOR_PAIR(2)); // 🌸 Rosa (magenta)
         mvprintw(linhaSaida++, 0, "O chefe atribuiu o prato %s para Tripulante %d", pedido->nome, tripulantes[tripulanteLivre].id);
+        attroff(COLOR_PAIR(2));
         refresh();
         pthread_mutex_unlock(&mutexTela);
 
