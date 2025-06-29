@@ -28,9 +28,6 @@ extern Tripulante tripulantes[];
 extern char mensagens_log[LOG_MAX_MESSAGES][128];
 extern int num_logs;
 
-/**
- * Adiciona um novo pedido ao final da lista de forma segura.
- */
 void adicionarPedido(const char *nome, int preparo, int cozimento)
 {
     pthread_mutex_lock(&mutexPedidos);
@@ -103,7 +100,7 @@ void *gerenciadorDeTela(void *arg)
         pthread_mutex_lock(&mutexBancadas);
         for (int i = 0; i < NUM_BANCADAS; i++)
         {
-            int cor = bancadas[i].ocupado ? 3 : 5; // Vermelho se ocupada, Verde se livre
+            int cor = bancadas[i].ocupado ? 3 : 5;
             attron(COLOR_PAIR(cor));
             mvprintw(linha_recursos, 1 + (i * 22), "Bancada %d: %s", bancadas[i].id, bancadas[i].ocupado ? "Ocupada" : "Livre");
             attroff(COLOR_PAIR(cor));
