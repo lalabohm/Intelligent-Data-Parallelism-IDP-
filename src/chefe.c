@@ -5,17 +5,19 @@
 #include "chefe.h"
 #include "structs.h"
 
-#define LIMITE_PEDIDOS 8
+#define LIMITE_PEDIDOS 4
 #define NUM_TRIPULANTES 4
 
 void *chefeDeCozinha(void *arg)
 {
     Tripulante *tripulantes = (Tripulante *)arg;
 
+    // Loop principal da thread, executa enquanto a simulação estiver ativa.
     while (muralAtivo)
     {
         pthread_mutex_lock(&mutexPedidos);
 
+        // Conta quantos pedidos estão na fila.
         int contador_pedidos = 0;
         Pedido *temp_count = inicio;
         while (temp_count)
@@ -59,6 +61,7 @@ void *chefeDeCozinha(void *arg)
         if (comando_atual.tripulante_id != -1)
         {
             cmd = comando_atual;
+            // "Consome" o comando para que ele não seja processado novamente.
             comando_atual.tripulante_id = -1;
         }
         pthread_mutex_unlock(&mutexComando);
@@ -89,12 +92,14 @@ void *chefeDeCozinha(void *arg)
             if (idx_atual == prato_idx_alvo)
             {
                 pedido_alvo = atual;
+                // Caso especial: o pedido a ser removido é o primeiro da lista.
                 if (anterior == NULL)
                 {
                     inicio = atual->proximo;
                 }
                 else
                 {
+                    // Caso geral: o pedido está no meio ou no fim da lista.
                     anterior->proximo = atual->proximo;
                 }
                 break;

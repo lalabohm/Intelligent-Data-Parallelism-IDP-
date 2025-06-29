@@ -30,10 +30,12 @@ Pedido *inicio = NULL;
 int muralAtivo = 1;
 Comando comando_atual = {-1, 0};
 
+// Recursos da cozinha
 Bancada bancadas[NUM_BANCADAS];
 Cozinha cozinhas[NUM_COZINHAS];
 Tripulante tripulantes[NUM_TRIPULANTES];
 
+// Cardápio de pratos que podem ser gerados
 const Pedido pratos_possiveis[] = {
     {"Nebulosa de Sabores", 5, 3},
     {"Anéis de Saturno", 4, 4},
@@ -44,6 +46,10 @@ const int num_pratos_possiveis = sizeof(pratos_possiveis) / sizeof(Pedido);
 char mensagens_log[LOG_MAX_MESSAGES][128];
 int num_logs = 0;
 
+/**
+ * Adiciona uma mensagem ao painel de log de forma segura (thread-safe).
+ * A string de mensagem a ser adicionada.
+ */
 void adicionar_log(const char *mensagem)
 {
     pthread_mutex_lock(&mutexLog);
@@ -63,6 +69,10 @@ void adicionar_log(const char *mensagem)
     pthread_mutex_unlock(&mutexLog);
 }
 
+/**
+ * Thread que gera novos pedidos automaticamente em intervalos de tempo.
+ * Argumentos da thread (não utilizado).
+ */
 void *geradorDePedidos(void *arg)
 {
     adicionar_log("Gerador de pedidos iniciado.");
@@ -82,6 +92,7 @@ void *geradorDePedidos(void *arg)
     return NULL;
 }
 
+// Thread dedicada a capturar os inputs do teclado do usuário.
 void *gerenciadorDeInput(void *arg)
 {
     int trip_ch, prato_ch;
@@ -113,6 +124,7 @@ void *gerenciadorDeInput(void *arg)
     return NULL;
 }
 
+// Define o estado inicial dos recursos (bancadas e cozinhas).
 void inicializarRecursos()
 {
     for (int i = 0; i < NUM_BANCADAS; i++)
@@ -125,6 +137,7 @@ void inicializarRecursos()
     }
 }
 
+// Inicializa a tela, cores e modos da biblioteca ncurses.
 void inicializarNcurses()
 {
     initscr();
@@ -143,6 +156,7 @@ void inicializarNcurses()
 
 int main()
 {
+    // Semente para o gerador de números aleatórios
     srand(time(NULL));
     setlocale(LC_ALL, "pt_BR.UTF-8");
 

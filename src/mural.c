@@ -129,7 +129,7 @@ void *gerenciadorDeTela(void *arg)
             }
             else
             {
-                mvprintw(linha_recursos + i, 1, "Tripulante %d: Ocioso", tripulantes[i].id);
+                mvprintw(linha_recursos + i, 1, "Tripulante %d: Trabalhando...", tripulantes[i].id);
             }
         }
 

@@ -4,7 +4,6 @@
 #include <pthread.h>
 #include "structs.h"
 
-// --- Variáveis Globais Externas ---
 extern pthread_mutex_t mutexBancadas;
 extern pthread_mutex_t mutexCozinhas;
 extern pthread_cond_t condBancadas;
@@ -13,7 +12,7 @@ extern pthread_cond_t condCozinhas;
 extern Bancada bancadas[];
 extern Cozinha cozinhas[];
 extern int muralAtivo;
-extern void adicionar_log(const char *mensagem); // Função de log centralizada
+extern void adicionar_log(const char *mensagem);
 
 void *executarTripulante(void *arg)
 {
@@ -96,7 +95,6 @@ void *executarTripulante(void *arg)
         if (!muralAtivo)
             break;
 
-        // Cozinha o prato
         sprintf(buffer_log, "Trip %d cozinha '%s' na cozinha %d", trip->id, pedidoAtual->nome, cozinhas[cozinhaIdx].id);
         adicionar_log(buffer_log);
         sleep(pedidoAtual->tempoCozimento);
