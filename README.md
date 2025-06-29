@@ -91,6 +91,28 @@ make clean
 
 2.  **Durante a Simulação:** A tela principal do jogo será exibida com o "Cardápio de Pedidos Pendentes". - **Seu Papel:** Você atua como o **Chefe da Cozinha**, e sua função é coletar os inputs para gerenciar a equipe[cite: 52]. - **Comandos:** O sistema de comando funciona com **duas teclas**, como sugerido pelo enunciado[cite: 56]: 1. Primeiro, pressione a tecla numérica do **Tripulante** que você quer usar (de 1 a 4). 2. Em seguida, pressione a tecla de letra do **Prato** que você quer atribuir (ex: `a`, `b`, `c`...). - _Exemplo de comando: Pressionar `2` e depois `a` dá a ordem: "Tripulante 2, prepare o prato [a] do cardápio"_ - **Objetivo:** Atenda a todos os pedidos, gerenciando sua equipe para que a fila de pratos não cresça demais.O jogo termina quando todos os pedidos tiverem sido atendidos ou por acúmulo de pedidos não atendidos[cite: 28].
 
-        ## 📸 Imagens do Projeto
+## 📸 Imagens do Projeto
 
-    ![alt text](<Captura de tela 2025-06-29 141155.png>)
+<p align="center">
+  <strong>1. Tela de Início (Setup)</strong><br>
+  <img src="Captura de tela 2025-06-29 141155.png" alt="Menu Inicial de Setup" width="80%"/>
+  <br><em>Menu principal no terminal, onde o usuário pode adicionar pedidos iniciais ou começar a simulação.</em>
+</p>
+
+<p align="center">
+  <strong>2. Cardápio de Setup</strong><br>
+  <img src="Captura de tela 2025-06-29 141207.png" alt="Cardápio para Adicionar Pedidos" width="80%"/>
+  <br><em>Tela exibida ao escolher 'adicionar pedido', mostrando os pratos pré-definidos para a configuração inicial.</em>
+</p>
+
+<p align="center">
+  <strong>3. Início da Simulação</strong><br>
+  <img src="Captura de tela 2025-06-29 141227.png" alt="Dashboard no Início da Simulação" width="80%"/>
+  <br><em>O dashboard principal do jogo no "momento zero", com os recursos livres e o primeiro pedido aguardando na fila.</em>
+</p>
+
+<p align="center">
+  <strong>4. Simulação em Ação</strong><br>
+  <img src="Captura de tela 2025-06-29 141257.png" alt="Simulação em Andamento" width="80%"/>
+  <br><em>O jogo em andamento, mostrando um tripulante trabalhando, recursos ocupados e o log de atividades sendo preenchido em tempo real.</em>
+</p>
