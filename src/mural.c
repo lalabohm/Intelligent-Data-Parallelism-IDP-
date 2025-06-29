@@ -7,7 +7,7 @@
 #include "mural.h"
 #include "structs.h"
 
-#define LOG_MAX_MESSAGES 8
+#define LOG_MAX_MESSAGES 4
 #define NUM_TRIPULANTES 4
 #define NUM_BANCADAS 3
 #define NUM_COZINHAS 3
@@ -20,17 +20,19 @@ extern pthread_mutex_t mutexCozinhas;
 
 extern Pedido *inicio;
 extern int muralAtivo;
+extern bool ja_teve_pedidos;
 
 extern Bancada bancadas[];
 extern Cozinha cozinhas[];
 extern Tripulante tripulantes[];
 
-extern char mensagens_log[LOG_MAX_MESSAGES][128];
+extern char mensagens_log[][128];
 extern int num_logs;
 
 void adicionarPedido(const char *nome, int preparo, int cozimento)
 {
     pthread_mutex_lock(&mutexPedidos);
+    ja_teve_pedidos = true;
     Pedido *novo = malloc(sizeof(Pedido));
     if (novo)
     {
@@ -56,25 +58,25 @@ void adicionarPedido(const char *nome, int preparo, int cozimento)
     pthread_mutex_unlock(&mutexPedidos);
 }
 
-/**
- * Thread que gerencia o desenho de toda a interface do jogo,
- * funcionando como a entidade "Exibição de Informações".
- */
 void *gerenciadorDeTela(void *arg)
 {
     while (muralAtivo)
     {
+        // Etapa 1: Bloqueia TODOS os mutexes no início do quadro.
+        // A ordem é importante para evitar deadlocks (tela primeiro, depois os dados).
         pthread_mutex_lock(&mutexTela);
+        pthread_mutex_lock(&mutexPedidos);
+        pthread_mutex_lock(&mutexBancadas);
+        pthread_mutex_lock(&mutexCozinhas);
+        pthread_mutex_lock(&mutexLog);
+
         erase();
 
-        // Seção 1: Título
         attron(COLOR_PAIR(2));
         mvprintw(0, 1, "BEM-VINDO AO RESTAURANTE FORA NO ESPAÇO!");
         attroff(COLOR_PAIR(2));
 
-        // Seção 2: Cardápio de Pedidos Pendentes
         mvprintw(2, 0, "--- CARDÁPIO DE PEDIDOS PENDENTES ---");
-        pthread_mutex_lock(&mutexPedidos);
         int linha_mural = 3;
         int prato_idx = 0;
         Pedido *temp = inicio;
@@ -83,21 +85,15 @@ void *gerenciadorDeTela(void *arg)
             attron(COLOR_PAIR(6));
             mvprintw(linha_mural, 1, "[%c]", 'a' + prato_idx);
             attroff(COLOR_PAIR(6));
-
             attron(COLOR_PAIR(1));
             mvprintw(linha_mural++, 5, "Prato: %s", temp->nome);
             attroff(COLOR_PAIR(1));
-
             temp = temp->proximo;
             prato_idx++;
         }
-        pthread_mutex_unlock(&mutexPedidos);
 
-        // Seção 3: Status dos Recursos
         int linha_recursos = 9;
         mvprintw(linha_recursos++, 0, "--- STATUS DOS RECURSOS ---");
-
-        pthread_mutex_lock(&mutexBancadas);
         for (int i = 0; i < NUM_BANCADAS; i++)
         {
             int cor = bancadas[i].ocupado ? 3 : 5;
@@ -105,10 +101,7 @@ void *gerenciadorDeTela(void *arg)
             mvprintw(linha_recursos, 1 + (i * 22), "Bancada %d: %s", bancadas[i].id, bancadas[i].ocupado ? "Ocupada" : "Livre");
             attroff(COLOR_PAIR(cor));
         }
-        pthread_mutex_unlock(&mutexBancadas);
         linha_recursos++;
-
-        pthread_mutex_lock(&mutexCozinhas);
         for (int i = 0; i < NUM_COZINHAS; i++)
         {
             int cor = cozinhas[i].ocupado ? 3 : 5;
@@ -116,10 +109,8 @@ void *gerenciadorDeTela(void *arg)
             mvprintw(linha_recursos, 1 + (i * 22), "Cozinha %d: %s", cozinhas[i].id, cozinhas[i].ocupado ? "Ocupada" : "Livre");
             attroff(COLOR_PAIR(cor));
         }
-        pthread_mutex_unlock(&mutexCozinhas);
         linha_recursos += 2;
 
-        // Seção 4: Status dos Tripulantes
         mvprintw(linha_recursos++, 0, "--- STATUS DOS TRIPULANTES ---");
         for (int i = 0; i < NUM_TRIPULANTES; i++)
         {
@@ -133,23 +124,26 @@ void *gerenciadorDeTela(void *arg)
             }
         }
 
-        // Seção 5: Log de Atividades
         int linha_log = 20;
         mvprintw(linha_log++, 0, "--- LOG DE ATIVIDADES ---");
-        pthread_mutex_lock(&mutexLog);
         for (int i = 0; i < num_logs; i++)
         {
             mvprintw(linha_log + i, 1, "%s", mensagens_log[i]);
         }
-        pthread_mutex_unlock(&mutexLog);
 
-        // Seção 6: Instruções de Comando
         attron(COLOR_PAIR(6));
         mvprintw(29, 0, "COMANDOS: Pressione (Tripulante 1-4) e depois (Prato a,b,c...) para atribuir um pedido.");
         attroff(COLOR_PAIR(6));
 
         refresh();
+
+        // Etapa 2: Libera TODOS os mutexes no final, na ordem inversa.
+        pthread_mutex_unlock(&mutexLog);
+        pthread_mutex_unlock(&mutexCozinhas);
+        pthread_mutex_unlock(&mutexBancadas);
+        pthread_mutex_unlock(&mutexPedidos);
         pthread_mutex_unlock(&mutexTela);
+
         usleep(100000);
     }
     return NULL;
