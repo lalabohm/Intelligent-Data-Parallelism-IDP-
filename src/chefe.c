@@ -5,8 +5,11 @@
 #include "chefe.h"
 #include "structs.h"
 
-#define LIMITE_PEDIDOS 4
+#define LIMITE_PEDIDOS 8
 #define NUM_TRIPULANTES 4
+
+// Adicionado para corrigir o bug de encerramento imediato
+extern bool ja_teve_pedidos;
 
 void *chefeDeCozinha(void *arg)
 {
@@ -31,7 +34,8 @@ void *chefeDeCozinha(void *arg)
             adicionar_log("ACÚMULO DE PEDIDOS! Fim de jogo!");
             muralAtivo = 0;
         }
-        else if (inicio == NULL && contador_pedidos == 0)
+        // CORREÇÃO: Adicionada a verificação 'ja_teve_pedidos'
+        else if (ja_teve_pedidos && inicio == NULL && contador_pedidos == 0)
         {
             bool todos_ociosos = true;
             for (int i = 0; i < NUM_TRIPULANTES; i++)
