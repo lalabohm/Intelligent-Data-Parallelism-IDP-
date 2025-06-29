@@ -1,4 +1,4 @@
-# 🛸 Fora no Espaço
+<h1 align="center">🛸 Fora no Espaço</h1>
 
 ## 👩‍💻 Autores
 
