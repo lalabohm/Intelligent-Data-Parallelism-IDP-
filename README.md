@@ -54,9 +54,9 @@ Este projeto utiliza a biblioteca `ncurses` para criar uma interface visual inte
 
 ### Instalação no Ubuntu/Debian:
 
-````bash
+```bash
 sudo apt-get install libncurses5-dev libncursesw5-dev
-
+```
 ## 🧪 Instruções de Compilação e Execução
 
 ### Pré-requisitos:
