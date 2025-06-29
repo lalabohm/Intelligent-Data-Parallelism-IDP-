@@ -95,24 +95,24 @@ make clean
 
 <p align="center">
   <strong>1. Tela de Início (Setup)</strong><br>
-  <img src="Captura de tela 2025-06-29 141155.png" alt="Menu Inicial de Setup" width="80%"/>
+  <img src="assets/Captura de tela 2025-06-29 141155.png" alt="Menu Inicial de Setup" width="80%"/>
   <br><em>Menu principal no terminal, onde o usuário pode adicionar pedidos iniciais ou começar a simulação.</em>
 </p>
 
 <p align="center">
   <strong>2. Cardápio de Setup</strong><br>
-  <img src="Captura de tela 2025-06-29 141207.png" alt="Cardápio para Adicionar Pedidos" width="80%"/>
+  <img src="assets/Captura de tela 2025-06-29 141207.png" alt="Cardápio para Adicionar Pedidos" width="80%"/>
   <br><em>Tela exibida ao escolher 'adicionar pedido', mostrando os pratos pré-definidos para a configuração inicial.</em>
 </p>
 
 <p align="center">
   <strong>3. Início da Simulação</strong><br>
-  <img src="Captura de tela 2025-06-29 141227.png" alt="Dashboard no Início da Simulação" width="80%"/>
+  <img src="assets/Captura de tela 2025-06-29 141227.png" alt="Dashboard no Início da Simulação" width="80%"/>
   <br><em>O dashboard principal do jogo no "momento zero", com os recursos livres e o primeiro pedido aguardando na fila.</em>
 </p>
 
 <p align="center">
   <strong>4. Simulação em Ação</strong><br>
-  <img src="Captura de tela 2025-06-29 141257.png" alt="Simulação em Andamento" width="80%"/>
+  <img src="assets/Captura de tela 2025-06-29 141257.png" alt="Simulação em Andamento" width="80%"/>
   <br><em>O jogo em andamento, mostrando um tripulante trabalhando, recursos ocupados e o log de atividades sendo preenchido em tempo real.</em>
 </p>
