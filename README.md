@@ -6,17 +6,17 @@
 
 ## 🎯 Objetivo do Trabalho
 
-Simular o funcionamento de um restaurante espacial, utilizando múltiplas threads com pthreads para gerenciar pedidos, tripulantes e cozinhas. O projeto envolve conceitos de programação concorrente e sincronização de recursos com mutex.
+Simular o funcionamento de um restaurante espacial, utilizando múltiplas threads com pthreads para gerenciar pedidos, tripulantes e cozinhas. O projeto envolve conceitos de programação concorrente e sincronização de recursos com mutex e variáveis de condição.
 
 ## ⚙️ Descrição do Funcionamento
 
 O programa realiza as seguintes tarefas:
 
-1. **Geração de pedidos**: os pratos são adicionados ao mural com tempos específicos de preparo e cozimento.
-2. **Exibição do mural**: periodicamente são exibidos no terminal os pratos disponíveis.
-3. **Chefe de cozinha**: distribui os pedidos do mural para os tripulantes disponíveis.
-4. **Tripulantes**: cada tripulante realiza o preparo e o cozimento dos pratos, utilizando bancadas e cozinhas conforme a disponibilidade.
-5. **Finalização**: após todos os pratos serem preparados e cozidos, o sistema é finalizado com uma mensagem no terminal.
+1.  **Geração de pedidos**: Novos pratos são adicionados dinamicamente ao mural durante a simulação.
+2.  **Exibição de informações**: Um dashboard em tempo real exibe o status dos pedidos, tripulantes e recursos da cozinha.
+3.  **Chefe de cozinha**: O jogador atua como o chefe, consumindo os inputs do teclado para distribuir os pedidos do mural aos tripulantes disponíveis.
+4.  **Tripulantes**: Cada tripulante (thread) realiza o preparo e o cozimento dos pratos, disputando e aguardando por recursos compartilhados (bancadas e cozinhas).
+5.  **Finalização**: O sistema é finalizado quando todos os pratos são entregues ou quando a fila de pedidos atinge um limite crítico.
 
 ## 🛠️ Descrição da Implementação
 
@@ -24,11 +24,11 @@ A solução foi desenvolvida com uma arquitetura multithread que separa as respo
 
 - **Threads criadas**:
 
-  - `gerenciadorDeTela`: Única thread responsável por toda a renderização na tela com `ncurses`. Ela lê o estado do jogo (pedidos, recursos, logs) de forma segura e atualiza a interface periodicamente. 
-  - `gerenciadorDeInput`: Thread dedicada a capturar as entradas do teclado do usuário (`getch`) de forma não bloqueante para o resto do sistema. 
-  - `geradorDePedidos`: Simula o "Mural de Pedidos", criando novas ordens de pratos em intervalos de tempo para manter a simulação dinâmica. 
-  - `chefeDeCozinha`: Atua como o "cérebro" da lógica, consumindo os comandos do usuário (capturados pelo `gerenciadorDeInput`) e atribuindo pedidos aos tripulantes disponíveis, validando também a disponibilidade de recursos. 
-  - `executarTripulante` (múltiplas): Cada uma representa um tripulante, executando as tarefas de preparo e cozimento e gerenciando o uso dos recursos (bancadas e cozinhas). 
+  - `gerenciadorDeTela`: Única thread responsável por toda a renderização na tela com `ncurses`. Ela lê o estado do jogo (pedidos, recursos, logs) de forma segura e atualiza a interface periodicamente.
+  - `gerenciadorDeInput`: Thread dedicada a capturar as entradas do teclado do usuário (`getch`) de forma não bloqueante para o resto do sistema.
+  - `geradorDePedidos`: Simula o "Mural de Pedidos", criando novas ordens de pratos em intervalos de tempo para manter a simulação dinâmica.
+  - `chefeDeCozinha`: Atua como o "cérebro" da lógica, consumindo os comandos do usuário (capturados pelo `gerenciadorDeInput`) e atribuindo pedidos aos tripulantes disponíveis.
+  - `executarTripulante` (múltiplas): Cada uma representa um tripulante, executando as tarefas de preparo e cozimento e gerenciando o uso dos recursos.
 
 - **Sincronização**:
 
@@ -54,9 +54,8 @@ Este projeto utiliza a biblioteca `ncurses` para criar uma interface visual inte
 
 ### Instalação no Ubuntu/Debian:
 
-```bash
+````bash
 sudo apt-get install libncurses5-dev libncursesw5-dev
-```
 
 ## 🧪 Instruções de Compilação e Execução
 
@@ -69,7 +68,7 @@ sudo apt-get install libncurses5-dev libncursesw5-dev
 
 ```bash
 make
-```
+````
 
 ### Execução:
 
@@ -85,12 +84,13 @@ make clean
 
 ## 🎮 Como Jogar
 
-1.  **Fase de Setup:** Ao iniciar o programa, você pode opcionalmente adicionar pedidos customizados na fila.
+1.  **Fase de Setup:** Ao iniciar o programa, um menu interativo aparece para permitir uma configuração inicial opcional:
 
-    - Digite `a` para adicionar um novo prato (informe nome, tempo de preparo e cozimento).
-    - Digite `s` para iniciar a simulação.
+    - Digite `a` para ver um cardápio e adicionar um pedido inicial à fila (escolhendo pelo número).
+    - Digite `s` para pular esta etapa e iniciar a simulação diretamente.
 
-2.  **Durante a Simulação:** A tela principal será exibida.
-    - **Seu Papel:** Você atua como o **Chefe da Cozinha**. 
-    - **Comandos:** Para atribuir o primeiro pedido da fila a um tripulante, pressione a tecla numérica correspondente ao tripulante (de 1 a 4). 
-    - **Objetivo:** Atenda a todos os pedidos. O jogo termina quando todos os pratos forem entregues ou se a fila de pedidos pendentes ficar muito grande. 
+2.  **Durante a Simulação:** A tela principal do jogo será exibida com o "Cardápio de Pedidos Pendentes". - **Seu Papel:** Você atua como o **Chefe da Cozinha**, e sua função é coletar os inputs para gerenciar a equipe[cite: 52]. - **Comandos:** O sistema de comando funciona com **duas teclas**, como sugerido pelo enunciado[cite: 56]: 1. Primeiro, pressione a tecla numérica do **Tripulante** que você quer usar (de 1 a 4). 2. Em seguida, pressione a tecla de letra do **Prato** que você quer atribuir (ex: `a`, `b`, `c`...). - _Exemplo de comando: Pressionar `2` e depois `a` dá a ordem: "Tripulante 2, prepare o prato [a] do cardápio"_ - **Objetivo:** Atenda a todos os pedidos, gerenciando sua equipe para que a fila de pratos não cresça demais.O jogo termina quando todos os pedidos tiverem sido atendidos ou por acúmulo de pedidos não atendidos[cite: 28].
+
+        ## 📸 Imagens do Projeto
+
+    ![alt text](<Captura de tela 2025-06-29 141155.png>)
